@@ -7,37 +7,12 @@ struct DinosaurCard: View {
     var body: some View {
         VStack {
             ZStack(alignment: .topTrailing) {
-                AsyncImage(url: dinosaur.imageURL) { phase in
-                    switch phase {
-                    case .empty:
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.2))
-                            .aspectRatio(1, contentMode: .fit)
-                            .overlay(
-                                Image(systemName: "photo")
-                                    .font(.largeTitle)
-                                    .foregroundColor(.gray)
-                            )
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(maxWidth: .infinity)
-                            .clipped()
-                    case .failure:
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.2))
-                            .aspectRatio(1, contentMode: .fit)
-                            .overlay(
-                                Image(systemName: "photo")
-                                    .font(.largeTitle)
-                                    .foregroundColor(.gray)
-                            )
-                    @unknown default:
-                        EmptyView()
-                    }
-                }
-                .aspectRatio(1, contentMode: .fit)
+                Image("\(dinosaur.name)_cover")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: .infinity)
+                    .clipped()
+                    .aspectRatio(1, contentMode: .fit)
                 
                 if isFavorite {
                     Image(systemName: "star.fill")
