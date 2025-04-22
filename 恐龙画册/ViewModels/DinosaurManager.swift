@@ -3,87 +3,103 @@ import SwiftUI
 
 @MainActor
 final class DinosaurManager: ObservableObject {
-    @Published private(set) var dinosaurs: [Dinosaur]
-    private let savePath: URL
+    @Published private(set) var dinosaurs: [Dinosaur] = []
+    @Published private(set) var filteredDinosaurs: [Dinosaur] = []
+    @Published var searchText: String = ""
+    @Published var selectedPeriod: DinosaurPeriod?
+    @Published var selectedDiet: Diet?
+    @Published var selectedSize: Size?
     
     init() {
-        self.dinosaurs = Dinosaur.allDinosaurs
-        
-        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        self.savePath = paths[0].appendingPathComponent("favorites.json")
-        
-        loadFavorites()
+        loadDinosaurs()
     }
     
-    func toggleFavorite(for dinosaur: Dinosaur) {
-        if let index = dinosaurs.firstIndex(where: { $0.id == dinosaur.id }) {
-            var updatedDinosaur = dinosaurs[index]
-            updatedDinosaur.isFavorite.toggle()
-            dinosaurs[index] = updatedDinosaur
-            saveFavorites()
-        }
+    private func loadDinosaurs() {
+        dinosaurs = Dinosaur.allDinosaurs
+        filteredDinosaurs = dinosaurs
     }
     
-    // 更新恐龙列表
-    private func saveFavorites() {
-        do {
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            let data = try encoder.encode(dinosaurs)
-            try data.write(to: savePath, options: .atomicWrite)
-        } catch {
-            print("Error saving favorites: \(error.localizedDescription)")
-        }
-    }
-    
-    private func loadFavorites() {
-        do {
-            let data = try Data(contentsOf: savePath)
-            let decoder = JSONDecoder()
-            dinosaurs = try decoder.decode([Dinosaur].self, from: data)
-        } catch {
-            // 如果加载失败，使用默认数据
-            dinosaurs = Dinosaur.allDinosaurs
-        }
-    }
-    
-    var favoriteDinosaurs: [Dinosaur] {
-        dinosaurs.filter { $0.isFavorite }
-    }
-    
-    func filteredDinosaurs(
-        searchText: String = "",
-        period: DinosaurPeriod? = nil,
-        diet: DinosaurDiet? = nil,
-        size: DinosaurSize? = nil,
-        favoritesOnly: Bool = false
-    ) -> [Dinosaur] {
-        var result = dinosaurs
-        
-        if favoritesOnly {
-            result = favoriteDinosaurs
-        }
-        
-        if let period = period {
-            result = result.filter { $0.period == period }
-        }
-        
-        if let diet = diet {
-            result = result.filter { $0.diet == diet }
-        }
-        
-        if let size = size {
-            result = result.filter { $0.size == size }
-        }
-        
-        if !searchText.isEmpty {
-            result = result.filter { dinosaur in
+    func filterDinosaurs() {
+        filteredDinosaurs = dinosaurs.filter { dinosaur in
+            let matchesSearch = searchText.isEmpty || 
                 dinosaur.name.localizedCaseInsensitiveContains(searchText) ||
                 dinosaur.scientificName.localizedCaseInsensitiveContains(searchText)
+            
+            let matchesPeriod = selectedPeriod == nil || dinosaur.period == selectedPeriod
+            let matchesDiet = selectedDiet == nil || dinosaur.diet == selectedDiet
+            let matchesSize = selectedSize == nil || dinosaur.size == selectedSize
+            
+            return matchesSearch && matchesPeriod && matchesDiet && matchesSize
+        }
+    }
+    
+    func getDinosaursByPeriod(_ period: DinosaurPeriod) -> [Dinosaur] {
+        return dinosaurs.filter { $0.period == period }
+    }
+    
+    func getDinosaursByDiet(_ diet: Diet) -> [Dinosaur] {
+        return dinosaurs.filter { $0.diet == diet }
+    }
+    
+    func getDinosaursBySize(_ size: Size) -> [Dinosaur] {
+        return dinosaurs.filter { $0.size == size }
+    }
+    
+    func getDinosaursByClassification(_ classification: Dinosaur.Classification) -> [Dinosaur] {
+        return dinosaurs.filter { $0.classification == classification }
+    }
+    
+    func getDinosaursByDistribution(_ distribution: String) -> [Dinosaur] {
+        return dinosaurs.filter { $0.distribution == distribution }
+    }
+    
+    func getDinosaursByDiscoveryYear(_ year: Int) -> [Dinosaur] {
+        return dinosaurs.filter { $0.discoveryYear == year }
+    }
+    
+    func getDinosaursByDiscoverer(_ discoverer: String) -> [Dinosaur] {
+        return dinosaurs.filter { $0.discoverer == discoverer }
+    }
+    
+    func getDinosaursWithVideo() -> [Dinosaur] {
+        return dinosaurs.filter { $0.videoURL != nil }
+    }
+    
+    func getDinosaursWithMap() -> [Dinosaur] {
+        return dinosaurs.filter { $0.mapCoordinates != nil }
+    }
+    
+    func getDinosaursByFeature(_ feature: String) -> [Dinosaur] {
+        return dinosaurs.filter { $0.features.contains(feature) }
+    }
+    
+    func getRelatedSpecies(for dinosaur: Dinosaur) -> [Dinosaur] {
+        return dinosaurs.filter { dinosaur.relatedSpecies.contains($0.name) }
+    }
+    
+    func getDinosaursInSizeRange(min: Double, max: Double) -> [Dinosaur] {
+        return dinosaurs.filter { $0.length >= min && $0.length <= max }
+    }
+    
+    func getDinosaursInWeightRange(min: Double, max: Double) -> [Dinosaur] {
+        return dinosaurs.filter { $0.weight >= min && $0.weight <= max }
+    }
+    
+    func getDinosaursInHeightRange(min: Double, max: Double) -> [Dinosaur] {
+        return dinosaurs.filter { $0.height >= min && $0.height <= max }
+    }
+    
+    func getDinosaursByLocation(latitude: Double, longitude: Double, radius: Double) -> [Dinosaur] {
+        return dinosaurs.filter { dinosaur in
+            guard let coordinates = dinosaur.mapCoordinates else { return false }
+            return coordinates.contains { coordinate in
+                let distance = sqrt(
+                    pow(coordinate.latitude - latitude, 2) +
+                    pow(coordinate.longitude - longitude, 2)
+                )
+                return distance <= radius
             }
         }
-        
-        return result
     }
 }
 

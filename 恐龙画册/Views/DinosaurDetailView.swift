@@ -1,8 +1,28 @@
 import SwiftUI
+import MapKit
 
 struct DinosaurDetailView: View {
     let dinosaur: Dinosaur
     @EnvironmentObject private var viewModel: DinosaurViewModel
+    @State private var region: MKCoordinateRegion
+    
+    init(dinosaur: Dinosaur) {
+        self.dinosaur = dinosaur
+        if let firstCoordinate = dinosaur.mapCoordinates?.first {
+            self._region = State(initialValue: MKCoordinateRegion(
+                center: CLLocationCoordinate2D(
+                    latitude: firstCoordinate.latitude,
+                    longitude: firstCoordinate.longitude
+                ),
+                span: MKCoordinateSpan(latitudeDelta: 10, longitudeDelta: 10)
+            ))
+        } else {
+            self._region = State(initialValue: MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
+                span: MKCoordinateSpan(latitudeDelta: 10, longitudeDelta: 10)
+            ))
+        }
+    }
     
     var body: some View {
         ScrollView {
@@ -32,6 +52,82 @@ struct DinosaurDetailView: View {
                             FeatureTag(text: dinosaur.period.rawValue, color: .blue)
                             FeatureTag(text: dinosaur.diet.rawValue, color: .green)
                             FeatureTag(text: dinosaur.size.rawValue, color: sizeColor)
+                            FeatureTag(text: dinosaur.classification.rawValue, color: .purple)
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    // 尺寸信息
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("尺寸信息")
+                            .font(.headline)
+                        HStack {
+                            InfoRow(title: "长度", value: "\(String(format: "%.1f", dinosaur.length))米")
+                            InfoRow(title: "高度", value: "\(String(format: "%.1f", dinosaur.height))米")
+                            InfoRow(title: "体重", value: "\(String(format: "%.1f", dinosaur.weight))吨")
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    // 分布地图
+                    if let coordinates = dinosaur.mapCoordinates {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("分布区域")
+                                .font(.headline)
+                            Map(coordinateRegion: $region, annotationItems: coordinates) { coordinate in
+                                MapMarker(coordinate: CLLocationCoordinate2D(
+                                    latitude: coordinate.latitude,
+                                    longitude: coordinate.longitude
+                                ), tint: .red)
+                            }
+                            .frame(height: 200)
+                            .cornerRadius(12)
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    // 发现信息
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("发现信息")
+                            .font(.headline)
+                        InfoRow(title: "发现年份", value: "\(dinosaur.discoveryYear)")
+                        InfoRow(title: "发现者", value: dinosaur.discoverer)
+                    }
+                    
+                    Divider()
+                    
+                    // 特征
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("主要特征")
+                            .font(.headline)
+                        ForEach(dinosaur.features, id: \.self) { feature in
+                            HStack {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                Text(feature)
+                            }
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    // 相关物种
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("相关物种")
+                            .font(.headline)
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(dinosaur.relatedSpecies, id: \.self) { species in
+                                    Text(species)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .background(Color.blue.opacity(0.1))
+                                        .cornerRadius(16)
+                                }
+                            }
                         }
                     }
                     
@@ -91,17 +187,7 @@ struct FeatureTag: View {
 #Preview {
     NavigationView {
         DinosaurDetailView(
-            dinosaur: Dinosaur(
-                id: UUID(),
-                name: "霸王龙",
-                scientificName: "Tyrannosaurus Rex",
-                period: .cretaceous,
-                diet: .carnivorous,
-                size: .large,
-                description: "霸王龙是白垩纪晚期最大的陆地掠食动物之一。它们有着巨大的头骨、强壮的下颌和锋利的牙齿。尽管它们的前肢相对较小，但强壮的后腿使它们能够快速移动。",
-                imageURL: URL(string: "https://example.com/trex.jpg")!,
-                length: 12.3
-            )
+            dinosaur: Dinosaur.allDinosaurs[0]
         )
         .environmentObject(DinosaurViewModel())
     }

@@ -1,50 +1,30 @@
 import SwiftUI
 
+@MainActor
 class DinosaurViewModel: ObservableObject {
-    @Published var searchText = ""
+    @Published var searchText: String = ""
     @Published var selectedPeriod: DinosaurPeriod?
-    @Published var selectedDiet: DinosaurDiet?
-    @Published var selectedSize: DinosaurSize?
+    @Published var selectedDiet: Diet?
+    @Published var selectedSize: Size?
     @Published var errorMessage: String?
-    @Published private var favorites: Set<UUID> = []
+    @Published var favorites: Set<UUID> = []
     
-    private let allDinosaurs = Dinosaur.allDinosaurs
+    private let manager = DinosaurManager()
     
     var filteredDinosaurs: [Dinosaur] {
-        var result = allDinosaurs
-        
-        // 应用搜索过滤
-        if !searchText.isEmpty {
-            result = result.filter { dinosaur in
-                dinosaur.name.localizedCaseInsensitiveContains(searchText) ||
-                dinosaur.scientificName.localizedCaseInsensitiveContains(searchText)
-            }
-        }
-        
-        // 应用时期过滤
-        if let period = selectedPeriod {
-            result = result.filter { $0.period == period }
-        }
-        
-        // 应用食性过滤
-        if let diet = selectedDiet {
-            result = result.filter { $0.diet == diet }
-        }
-        
-        // 应用体型过滤
-        if let size = selectedSize {
-            result = result.filter { $0.size == size }
-        }
-        
-        return result
+        manager.filteredDinosaurs
     }
     
     var favoriteDinosaurs: [Dinosaur] {
-        allDinosaurs.filter { favorites.contains($0.id) }
+        manager.dinosaurs.filter { favorites.contains($0.id) }
     }
     
-    func isFavorite(_ dinosaur: Dinosaur) -> Bool {
-        favorites.contains(dinosaur.id)
+    func filterDinosaurs() {
+        manager.searchText = searchText
+        manager.selectedPeriod = selectedPeriod
+        manager.selectedDiet = selectedDiet
+        manager.selectedSize = selectedSize
+        manager.filterDinosaurs()
     }
     
     func toggleFavorite(_ dinosaur: Dinosaur) {
@@ -53,6 +33,10 @@ class DinosaurViewModel: ObservableObject {
         } else {
             favorites.insert(dinosaur.id)
         }
+    }
+    
+    func isFavorite(_ dinosaur: Dinosaur) -> Bool {
+        favorites.contains(dinosaur.id)
     }
     
     func clearFilters() {

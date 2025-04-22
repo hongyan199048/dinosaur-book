@@ -82,11 +82,7 @@ struct DinosaurCard: View {
     }
 }
 
-#Preview {
-    DinosaurCard(
-        dinosaur: Dinosaur.allDinosaurs[0],
-        isFavorite: true
-    )
-    .padding()
-    .previewLayout(.sizeThatFits)
+#Preview("Dinosaur Card") {
+    DinosaurCard(dinosaur: Dinosaur.allDinosaurs[0], isFavorite: false)
+        .padding()
 } 

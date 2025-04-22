@@ -1,126 +1,172 @@
 import SwiftUI
 
 struct DinosaurListView: View {
-    @EnvironmentObject private var viewModel: DinosaurViewModel
-    @State private var showingFavorites = false
+    @StateObject private var viewModel = DinosaurViewModel()
+    @State private var showingFilters = false
     
     var body: some View {
-        VStack(spacing: 0) {
-            // 搜索和过滤栏
-            VStack(spacing: 8) {
-                SearchBar(text: $viewModel.searchText)
-                    .padding(.horizontal)
+        NavigationView {
+            VStack {
+                searchAndFilterSection
                 
-                // 收藏夹切换
-                Toggle("只显示收藏", isOn: $showingFavorites)
-                    .padding(.horizontal)
-                    .tint(.yellow)
-            }
-            .padding(.vertical, 8)
-            
-            // 过滤器
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    // 清除过滤器按钮
-                    if viewModel.selectedPeriod != nil || 
-                       viewModel.selectedDiet != nil || 
-                       viewModel.selectedSize != nil ||
-                       !viewModel.searchText.isEmpty {
-                        Button(action: viewModel.clearFilters) {
-                            Label("清除", systemImage: "xmark.circle.fill")
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(Color(.systemGray6))
-                                .foregroundColor(.primary)
-                                .cornerRadius(20)
-                        }
-                    }
-                    
-                    // 时期过滤器
-                    ForEach(DinosaurPeriod.allCases, id: \.self) { period in
-                        FilterButton(
-                            title: period.rawValue,
-                            isSelected: viewModel.selectedPeriod == period,
-                            action: {
-                                viewModel.selectedPeriod = viewModel.selectedPeriod == period ? nil : period
-                            }
-                        )
-                    }
-                    
-                    // 食性过滤器
-                    ForEach(DinosaurDiet.allCases, id: \.self) { diet in
-                        FilterButton(
-                            title: diet.rawValue,
-                            isSelected: viewModel.selectedDiet == diet,
-                            action: {
-                                viewModel.selectedDiet = viewModel.selectedDiet == diet ? nil : diet
-                            }
-                        )
-                    }
-                    
-                    // 体型过滤器
-                    ForEach(DinosaurSize.allCases, id: \.self) { size in
-                        FilterButton(
-                            title: size.rawValue,
-                            isSelected: viewModel.selectedSize == size,
-                            action: {
-                                viewModel.selectedSize = viewModel.selectedSize == size ? nil : size
-                            }
-                        )
-                    }
-                }
-                .padding(.horizontal)
-            }
-            .padding(.bottom)
-            
-            // 错误提示
-            if let errorMessage = viewModel.errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
+                if showingFilters {
+                    FilterView(
+                        selectedPeriod: $viewModel.selectedPeriod,
+                        selectedDiet: $viewModel.selectedDiet,
+                        selectedSize: $viewModel.selectedSize
+                    )
                     .padding()
-            }
-            
-            // 恐龙列表
-            let dinosaurs = showingFavorites ? viewModel.favoriteDinosaurs : viewModel.filteredDinosaurs
-            
-            if dinosaurs.isEmpty {
-                VStack(spacing: 20) {
-                    Image(systemName: showingFavorites ? "star.slash" : "magnifyingglass")
-                        .font(.system(size: 50))
-                        .foregroundColor(.gray)
-                    Text(showingFavorites ? "暂无收藏的恐龙" : "没有找到符合条件的恐龙")
-                        .foregroundColor(.gray)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                List(dinosaurs) { dinosaur in
-                    NavigationLink {
-                        DinosaurDetailView(dinosaur: dinosaur)
-                    } label: {
-                        DinosaurRow(
+                
+                dinosaurGrid
+            }
+            .navigationTitle("恐龙画册")
+            .onChange(of: viewModel.searchText) { oldValue, newValue in
+                viewModel.filterDinosaurs()
+            }
+            .onChange(of: viewModel.selectedPeriod) { oldValue, newValue in
+                viewModel.filterDinosaurs()
+            }
+            .onChange(of: viewModel.selectedDiet) { oldValue, newValue in
+                viewModel.filterDinosaurs()
+            }
+            .onChange(of: viewModel.selectedSize) { oldValue, newValue in
+                viewModel.filterDinosaurs()
+            }
+        }
+    }
+    
+    private var searchAndFilterSection: some View {
+        VStack {
+            SearchBar(text: $viewModel.searchText)
+                .padding(.horizontal)
+            
+            Button {
+                showingFilters.toggle()
+            } label: {
+                HStack {
+                    Image(systemName: "line.3.horizontal.decrease.circle")
+                    Text("筛选")
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(showingFilters ? Color.blue : Color.gray.opacity(0.2))
+                )
+                .foregroundColor(showingFilters ? .white : .primary)
+            }
+            .padding(.horizontal)
+        }
+    }
+    
+    private var dinosaurGrid: some View {
+        ScrollView {
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 16) {
+                ForEach(viewModel.filteredDinosaurs) { dinosaur in
+                    NavigationLink(destination: DinosaurDetailView(dinosaur: dinosaur)) {
+                        DinosaurCard(
                             dinosaur: dinosaur,
                             isFavorite: viewModel.isFavorite(dinosaur)
                         )
                     }
-                    .swipeActions(edge: .trailing) {
-                        Button(action: { viewModel.toggleFavorite(dinosaur) }) {
-                            Label(
-                                viewModel.isFavorite(dinosaur) ? "取消收藏" : "收藏",
-                                systemImage: viewModel.isFavorite(dinosaur) ? "star.slash.fill" : "star.fill"
-                            )
+                }
+            }
+            .padding()
+        }
+    }
+}
+
+struct FilterView: View {
+    @Binding var selectedPeriod: DinosaurPeriod?
+    @Binding var selectedDiet: Diet?
+    @Binding var selectedSize: Size?
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("筛选条件")
+                .font(.headline)
+            
+            periodFilter
+            dietFilter
+            sizeFilter
+        }
+    }
+    
+    private var periodFilter: some View {
+        FilterSection(title: "时期", items: DinosaurPeriod.allCases) { period in
+            selectedPeriod = period
+        } selectedItem: {
+            selectedPeriod
+        }
+    }
+    
+    private var dietFilter: some View {
+        FilterSection(title: "食性", items: Diet.allCases) { diet in
+            selectedDiet = diet
+        } selectedItem: {
+            selectedDiet
+        }
+    }
+    
+    private var sizeFilter: some View {
+        FilterSection(title: "体型", items: Size.allCases) { size in
+            selectedSize = size
+        } selectedItem: {
+            selectedSize
+        }
+    }
+}
+
+struct FilterSection<T: Hashable>: View {
+    let title: String
+    let items: [T]
+    let action: (T?) -> Void
+    let selectedItem: () -> T?
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack {
+                    ForEach([nil] + items, id: \.self) { item in
+                        FilterChip(
+                            title: (item as? (any RawRepresentable))?.rawValue as? String ?? "全部",
+                            isSelected: selectedItem() == item
+                        ) {
+                            action(item)
                         }
-                        .tint(viewModel.isFavorite(dinosaur) ? .red : .yellow)
                     }
                 }
             }
         }
-        .navigationTitle("恐龙图鉴")
+    }
+}
+
+struct FilterChip: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.caption)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(isSelected ? Color.blue : Color.gray.opacity(0.2))
+                )
+                .foregroundColor(isSelected ? .white : .primary)
+        }
     }
 }
 
 #Preview {
-    NavigationView {
-        DinosaurListView()
-            .environmentObject(DinosaurViewModel())
-    }
+    DinosaurListView()
 } 
