@@ -5,77 +5,76 @@ struct DinosaurListView: View {
     @State private var showingFilters = false
     
     var body: some View {
-        NavigationView {
-            VStack {
-                searchAndFilterSection
+        VStack(spacing: 0) {
+            // 顶部搜索和筛选栏
+            VStack(spacing: 12) {
+                SearchBar(text: $viewModel.searchText)
+                    .padding(.horizontal)
                 
-                if showingFilters {
-                    FilterView(
-                        selectedPeriod: $viewModel.selectedPeriod,
-                        selectedDiet: $viewModel.selectedDiet,
-                        selectedSize: $viewModel.selectedSize
+                // 筛选按钮
+                Button {
+                    showingFilters.toggle()
+                } label: {
+                    HStack {
+                        Image(systemName: "line.3.horizontal.decrease.circle")
+                        Text("筛选")
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(showingFilters ? Color.blue : Color.gray.opacity(0.2))
                     )
-                    .padding()
+                    .foregroundColor(showingFilters ? .white : .primary)
                 }
-                
-                dinosaurGrid
-            }
-            .navigationTitle("恐龙画册")
-            .onChange(of: viewModel.searchText) { oldValue, newValue in
-                viewModel.filterDinosaurs()
-            }
-            .onChange(of: viewModel.selectedPeriod) { oldValue, newValue in
-                viewModel.filterDinosaurs()
-            }
-            .onChange(of: viewModel.selectedDiet) { oldValue, newValue in
-                viewModel.filterDinosaurs()
-            }
-            .onChange(of: viewModel.selectedSize) { oldValue, newValue in
-                viewModel.filterDinosaurs()
-            }
-        }
-    }
-    
-    private var searchAndFilterSection: some View {
-        VStack {
-            SearchBar(text: $viewModel.searchText)
                 .padding(.horizontal)
-            
-            Button {
-                showingFilters.toggle()
-            } label: {
-                HStack {
-                    Image(systemName: "line.3.horizontal.decrease.circle")
-                    Text("筛选")
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(showingFilters ? Color.blue : Color.gray.opacity(0.2))
-                )
-                .foregroundColor(showingFilters ? .white : .primary)
             }
-            .padding(.horizontal)
-        }
-    }
-    
-    private var dinosaurGrid: some View {
-        ScrollView {
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 16) {
-                ForEach(viewModel.filteredDinosaurs) { dinosaur in
-                    NavigationLink(destination: DinosaurDetailView(dinosaur: dinosaur)) {
-                        DinosaurCard(
-                            dinosaur: dinosaur,
-                            isFavorite: viewModel.isFavorite(dinosaur)
-                        )
+            .padding(.vertical, 8)
+            .background(Color(.systemBackground))
+            .shadow(radius: 2)
+            
+            // 筛选面板
+            if showingFilters {
+                FilterView(
+                    selectedPeriod: $viewModel.selectedPeriod,
+                    selectedDiet: $viewModel.selectedDiet,
+                    selectedSize: $viewModel.selectedSize
+                )
+                .padding()
+                .background(Color(.systemBackground))
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+            
+            // 恐龙网格
+            ScrollView {
+                LazyVGrid(columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ], spacing: 16) {
+                    ForEach(viewModel.filteredDinosaurs) { dinosaur in
+                        NavigationLink(destination: DinosaurDetailView(dinosaur: dinosaur)) {
+                            DinosaurCard(
+                                dinosaur: dinosaur,
+                                isFavorite: viewModel.isFavorite(dinosaur)
+                            )
+                        }
                     }
                 }
+                .padding()
             }
-            .padding()
+        }
+        .navigationTitle("恐龙画册")
+        .onChange(of: viewModel.searchText) { oldValue, newValue in
+            viewModel.filterDinosaurs()
+        }
+        .onChange(of: viewModel.selectedPeriod) { oldValue, newValue in
+            viewModel.filterDinosaurs()
+        }
+        .onChange(of: viewModel.selectedDiet) { oldValue, newValue in
+            viewModel.filterDinosaurs()
+        }
+        .onChange(of: viewModel.selectedSize) { oldValue, newValue in
+            viewModel.filterDinosaurs()
         }
     }
 }

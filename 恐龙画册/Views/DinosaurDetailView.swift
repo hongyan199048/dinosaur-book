@@ -1,5 +1,7 @@
 import SwiftUI
 import MapKit
+import AVKit
+import WebKit
 
 struct DinosaurDetailView: View {
     let dinosaur: Dinosaur
@@ -27,17 +29,22 @@ struct DinosaurDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // 恐龙图片
-                AsyncImage(url: dinosaur.imageURL) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Color.gray.opacity(0.3)
+                // 视频播放器
+                if let videoURL = dinosaur.videoURL {
+                    BilibiliVideoPlayer(videoURL: videoURL)
+                        .aspectRatio(16/9, contentMode: .fit)
+                        .frame(maxWidth: .infinity)
+                } else {
+                    // 如果没有视频，显示图片
+                    AsyncImage(url: dinosaur.imageURL) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(16/9, contentMode: .fit)
+                    } placeholder: {
+                        Color.gray.opacity(0.3)
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(height: 250)
-                .frame(maxWidth: .infinity)
-                .clipped()
                 
                 VStack(alignment: .leading, spacing: 16) {
                     // 基本信息
@@ -48,11 +55,13 @@ struct DinosaurDetailView: View {
                             .foregroundColor(.secondary)
                         
                         // 特征标签
-                        HStack(spacing: 12) {
-                            FeatureTag(text: dinosaur.period.rawValue, color: .blue)
-                            FeatureTag(text: dinosaur.diet.rawValue, color: .green)
-                            FeatureTag(text: dinosaur.size.rawValue, color: sizeColor)
-                            FeatureTag(text: dinosaur.classification.rawValue, color: .purple)
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                FeatureTag(text: dinosaur.period.rawValue, color: .blue)
+                                FeatureTag(text: dinosaur.diet.rawValue, color: .green)
+                                FeatureTag(text: dinosaur.size.rawValue, color: sizeColor)
+                                FeatureTag(text: dinosaur.classification.rawValue, color: .purple)
+                            }
                         }
                     }
                     
@@ -136,12 +145,11 @@ struct DinosaurDetailView: View {
                     // 详细描述
                     Text(dinosaur.description)
                         .font(.body)
-                        .lineSpacing(6)
+                        .lineSpacing(4)
                 }
-                .padding()
+                .padding(.horizontal)
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(dinosaur.name)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -181,6 +189,108 @@ struct FeatureTag: View {
             .background(color.opacity(0.2))
             .foregroundColor(color)
             .cornerRadius(16)
+    }
+}
+
+struct BilibiliVideoPlayer: UIViewRepresentable {
+    let videoURL: URL
+    
+    func makeUIView(context: Context) -> WKWebView {
+        let configuration = WKWebViewConfiguration()
+        configuration.allowsInlineMediaPlayback = true
+        configuration.mediaTypesRequiringUserActionForPlayback = []
+        
+        let webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.navigationDelegate = context.coordinator
+        webView.scrollView.isScrollEnabled = false
+        webView.backgroundColor = .clear
+        webView.isOpaque = false
+        return webView
+    }
+    
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        if let bvID = extractBVID(from: videoURL) {
+            let html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                <style>
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+                    
+                    html, body {
+                        width: 100%;
+                        height: 100%;
+                        overflow: hidden;
+                        background-color: transparent;
+                    }
+                    
+                    .video-container {
+                        position: relative;
+                        width: 100%;
+                        height: 0;
+                        padding-bottom: 56.25%; /* 16:9 */
+                        background-color: transparent;
+                    }
+                    
+                    iframe {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        border: none;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="video-container">
+                    <iframe src="https://player.bilibili.com/player.html?bvid=\(bvID)&autoplay=0&high_quality=1&danmaku=0"
+                            scrolling="no"
+                            frameborder="0"
+                            sandbox="allow-top-navigation allow-same-origin allow-forms allow-scripts"
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            </body>
+            </html>
+            """
+            webView.loadHTMLString(html, baseURL: nil)
+        }
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, WKNavigationDelegate {
+        var parent: BilibiliVideoPlayer
+        
+        init(_ parent: BilibiliVideoPlayer) {
+            self.parent = parent
+        }
+        
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            // 视频加载完成后的处理
+        }
+        
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            print("Video loading error: \(error.localizedDescription)")
+        }
+    }
+    
+    private func extractBVID(from url: URL) -> String? {
+        let urlString = url.absoluteString
+        // 匹配BV开头的ID，支持更多格式
+        if let range = urlString.range(of: "BV[A-Za-z0-9]+", options: .regularExpression) {
+            return String(urlString[range])
+        }
+        return nil
     }
 }
 

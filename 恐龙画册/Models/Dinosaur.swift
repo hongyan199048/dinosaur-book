@@ -64,6 +64,30 @@ extension Dinosaur {
     static let allDinosaurs: [Dinosaur] = [
         Dinosaur(
             id: UUID(),
+            name: "三角龙",
+            scientificName: "Triceratops",
+            period: .cretaceous,
+            diet: .herbivorous,
+            size: .large,
+            description: "三角龙是最著名的角龙类恐龙之一，以其独特的三角形头骨和颈部盾牌而闻名。它们是白垩纪晚期的草食性恐龙，拥有强壮的身体和锋利的喙，可以用来切割植物。三根角可以用来防御掠食者，特别是霸王龙的攻击。",
+            imageURL: URL(string: "https://example.com/triceratops.jpg")!,
+            length: 9.0,
+            weight: 12.0,
+            height: 3.0,
+            distribution: "北美洲",
+            videoURL: URL(string: "https://www.bilibili.com/video/BV1GMoMYfESS/?spm_id_from=333.1007.tianma.3-1-5.click"),
+            mapCoordinates: [
+                Coordinate(latitude: 43.0, longitude: -104.0, locationName: "怀俄明州"),
+                Coordinate(latitude: 45.0, longitude: -108.0, locationName: "蒙大拿州")
+            ],
+            discoveryYear: 1887,
+            discoverer: "约翰·贝尔·海切尔",
+            classification: .ceratopsian,
+            features: ["三根角", "盾状颈褶", "鹦鹉喙", "强壮的四肢", "群居生活"],
+            relatedSpecies: ["戟龙", "五角龙", "独角龙", "原角龙"]
+        ),
+        Dinosaur(
+            id: UUID(),
             name: "霸王龙",
             scientificName: "Tyrannosaurus Rex",
             period: .cretaceous,
@@ -75,7 +99,7 @@ extension Dinosaur {
             weight: 8.4,
             height: 4.0,
             distribution: "北美洲",
-            videoURL: URL(string: "https://example.com/trex-video.mp4"),
+            videoURL: URL(string: "https://www.bilibili.com/video/BV11r421L7pD/?spm_id_from=333.337.search-card.all.click"),
             mapCoordinates: [
                 Coordinate(latitude: 45.0, longitude: -100.0, locationName: "蒙大拿州"),
                 Coordinate(latitude: 40.0, longitude: -110.0, locationName: "怀俄明州")
@@ -99,7 +123,7 @@ extension Dinosaur {
             weight: 7.0,
             height: 4.5,
             distribution: "北非",
-            videoURL: URL(string: "https://example.com/spinosaurus-video.mp4"),
+            videoURL: nil,
             mapCoordinates: [
                 Coordinate(latitude: 30.0, longitude: 10.0, locationName: "埃及"),
                 Coordinate(latitude: 32.0, longitude: 5.0, locationName: "摩洛哥")
@@ -123,7 +147,7 @@ extension Dinosaur {
             weight: 6.0,
             height: 2.0,
             distribution: "北美洲",
-            videoURL: URL(string: "https://example.com/ankylosaurus-video.mp4"),
+            videoURL: nil,
             mapCoordinates: [
                 Coordinate(latitude: 45.0, longitude: -100.0, locationName: "蒙大拿州"),
                 Coordinate(latitude: 40.0, longitude: -110.0, locationName: "怀俄明州")
@@ -147,7 +171,7 @@ extension Dinosaur {
             weight: 15.0,
             height: 2.0,
             distribution: "全球海洋",
-            videoURL: URL(string: "https://example.com/mosasaurus-video.mp4"),
+            videoURL: nil,
             mapCoordinates: [
                 Coordinate(latitude: 50.0, longitude: 4.0, locationName: "荷兰"),
                 Coordinate(latitude: 40.0, longitude: -74.0, locationName: "新泽西州")
@@ -171,7 +195,7 @@ extension Dinosaur {
             weight: 0.5,
             height: 0.3,
             distribution: "欧洲",
-            videoURL: URL(string: "https://example.com/archaeopteryx-video.mp4"),
+            videoURL: nil,
             mapCoordinates: [
                 Coordinate(latitude: 48.0, longitude: 11.0, locationName: "德国"),
                 Coordinate(latitude: 50.0, longitude: 8.0, locationName: "法国")
@@ -195,7 +219,7 @@ extension Dinosaur {
             weight: 3.5,
             height: 3.0,
             distribution: "欧洲、北美洲",
-            videoURL: URL(string: "https://example.com/iguanodon-video.mp4"),
+            videoURL: nil,
             mapCoordinates: [
                 Coordinate(latitude: 50.0, longitude: 4.0, locationName: "比利时"),
                 Coordinate(latitude: 51.0, longitude: 0.0, locationName: "英国")
@@ -219,7 +243,7 @@ extension Dinosaur {
             weight: 1.0,
             height: 0.5,
             distribution: "全球海洋",
-            videoURL: URL(string: "https://example.com/ichthyosaurus-video.mp4"),
+            videoURL: nil,
             mapCoordinates: [
                 Coordinate(latitude: 51.0, longitude: -2.0, locationName: "英国"),
                 Coordinate(latitude: 50.0, longitude: 8.0, locationName: "德国")
@@ -243,7 +267,7 @@ extension Dinosaur {
             weight: 0.5,
             height: 1.0,
             distribution: "亚洲",
-            videoURL: URL(string: "https://example.com/oviraptor-video.mp4"),
+            videoURL: nil,
             mapCoordinates: [
                 Coordinate(latitude: 45.0, longitude: 100.0, locationName: "蒙古"),
                 Coordinate(latitude: 40.0, longitude: 110.0, locationName: "中国")
