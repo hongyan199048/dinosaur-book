@@ -3,29 +3,48 @@ import SwiftUI
 // 搜索栏组件
 struct SearchBar: View {
     @Binding var text: String
+    var onFilterTap: () -> Void
+    @Binding var isFilterActive: Bool
     
     var body: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.gray)
-            
-            TextField("搜索恐龙...", text: $text)
-                .textFieldStyle(PlainTextFieldStyle())
-                .autocapitalization(.none)
-                .disableAutocorrection(true)
-            
-            if !text.isEmpty {
-                Button(action: {
-                    text = ""
-                }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.gray)
+        HStack(spacing: 12) {
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.gray)
+                
+                TextField("搜索恐龙...", text: $text)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                
+                if !text.isEmpty {
+                    Button(action: {
+                        text = ""
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.gray)
+                    }
                 }
             }
+            .padding(8)
+            .background(Color(.systemGray6))
+            .cornerRadius(10)
+            
+            // 筛选按钮
+            Button(action: onFilterTap) {
+                HStack(spacing: 4) {
+                    Image(systemName: "line.3.horizontal.decrease.circle")
+                    Text("筛选")
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(isFilterActive ? Color.blue : Color.gray.opacity(0.2))
+                )
+                .foregroundColor(isFilterActive ? .white : .primary)
+            }
         }
-        .padding(8)
-        .background(Color(.systemGray6))
-        .cornerRadius(10)
     }
 }
 

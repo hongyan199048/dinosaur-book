@@ -8,25 +8,11 @@ struct DinosaurListView: View {
         VStack(spacing: 0) {
             // 顶部搜索和筛选栏
             VStack(spacing: 12) {
-                SearchBar(text: $viewModel.searchText)
-                    .padding(.horizontal)
-                
-                // 筛选按钮
-                Button {
-                    showingFilters.toggle()
-                } label: {
-                    HStack {
-                        Image(systemName: "line.3.horizontal.decrease.circle")
-                        Text("筛选")
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(showingFilters ? Color.blue : Color.gray.opacity(0.2))
-                    )
-                    .foregroundColor(showingFilters ? .white : .primary)
-                }
+                SearchBar(
+                    text: $viewModel.searchText,
+                    onFilterTap: { showingFilters.toggle() },
+                    isFilterActive: $showingFilters
+                )
                 .padding(.horizontal)
             }
             .padding(.vertical, 8)
