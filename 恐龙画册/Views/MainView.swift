@@ -15,6 +15,14 @@ struct MainView: View {
             }
             
             NavigationView {
+                GameView()
+            }
+            .navigationViewStyle(.stack)
+            .tabItem {
+                Label("游戏", systemImage: "gamecontroller.fill")
+            }
+            
+            NavigationView {
                 FavoritesView()
             }
             .navigationViewStyle(.stack)

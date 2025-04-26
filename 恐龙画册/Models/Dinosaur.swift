@@ -75,7 +75,7 @@ extension Dinosaur {
             weight: 12.0,
             height: 3.0,
             distribution: "北美洲",
-            videoURL: URL(string: "https://www.bilibili.com/video/BV1GMoMYfESS/?spm_id_from=333.1007.tianma.3-1-5.click"),
+            videoURL: URL(string: "https://www.bilibili.com/video/BV1ED4y1D7Bd/?spm_id_from=333.337.search-card.all.click"),
             mapCoordinates: [
                 Coordinate(latitude: 43.0, longitude: -104.0, locationName: "怀俄明州"),
                 Coordinate(latitude: 45.0, longitude: -108.0, locationName: "蒙大拿州")
@@ -195,7 +195,7 @@ extension Dinosaur {
             weight: 0.5,
             height: 0.3,
             distribution: "欧洲",
-            videoURL: nil,
+            videoURL: URL(string: "https://www.bilibili.com/video/BV1fS421A7QP/?spm_id_from=333.337.search-card.all.click"),
             mapCoordinates: [
                 Coordinate(latitude: 48.0, longitude: 11.0, locationName: "德国"),
                 Coordinate(latitude: 50.0, longitude: 8.0, locationName: "法国")
