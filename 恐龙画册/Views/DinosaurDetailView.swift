@@ -7,6 +7,7 @@ struct DinosaurDetailView: View {
     let dinosaur: Dinosaur
     @EnvironmentObject private var viewModel: DinosaurViewModel
     @State private var region: MKCoordinateRegion
+    @State private var isFavorited: Bool = false
     
     init(dinosaur: Dinosaur) {
         self.dinosaur = dinosaur
@@ -28,22 +29,43 @@ struct DinosaurDetailView: View {
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                // 视频播放器
-                if let videoURL = dinosaur.videoURL {
-                    BilibiliVideoPlayer(videoURL: videoURL)
-                        .aspectRatio(16/9, contentMode: .fit)
+            VStack(alignment: .leading, spacing: 16) {
+                // 视频播放器和收藏按钮
+                ZStack(alignment: .topTrailing) {
+                    // 视频播放器
+                    if let videoURL = dinosaur.videoURL {
+                        VStack {
+                            GeometryReader { geometry in
+                                BilibiliVideoPlayer(videoURL: videoURL)
+                                    .frame(width: geometry.size.width)
+                                    .frame(height: geometry.size.width * 9/16)
+                            }
+                            .frame(height: UIScreen.main.bounds.width * 9/16)
+                        }
+                    } else {
+                        // 如果没有视频，显示图片
+                        AsyncImage(url: dinosaur.imageURL) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(16/9, contentMode: .fit)
+                        } placeholder: {
+                            Color.gray.opacity(0.3)
+                        }
                         .frame(maxWidth: .infinity)
-                } else {
-                    // 如果没有视频，显示图片
-                    AsyncImage(url: dinosaur.imageURL) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(16/9, contentMode: .fit)
-                    } placeholder: {
-                        Color.gray.opacity(0.3)
                     }
-                    .frame(maxWidth: .infinity)
+                    
+                    Button(action: {
+                        isFavorited.toggle()
+                        viewModel.toggleFavorite(dinosaur)
+                    }) {
+                        Image(systemName: isFavorited ? "star.fill" : "star")
+                            .foregroundColor(isFavorited ? .yellow : .gray)
+                            .font(.title2)
+                            .padding(8)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
+                    }
+                    .padding([.top, .trailing], 8)
                 }
                 
                 VStack(alignment: .leading, spacing: 16) {
@@ -151,16 +173,6 @@ struct DinosaurDetailView: View {
             }
         }
         .navigationTitle(dinosaur.name)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    viewModel.toggleFavorite(dinosaur)
-                } label: {
-                    Image(systemName: viewModel.isFavorite(dinosaur) ? "star.fill" : "star")
-                        .foregroundColor(.yellow)
-                }
-            }
-        }
     }
     
     private var sizeColor: Color {

@@ -57,13 +57,6 @@ struct PuzzleDifficultyView: View {
         }
         .navigationTitle("选择难度")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("取消") {
-                    dismiss()
-                }
-            }
-        }
     }
 }
 

@@ -62,18 +62,17 @@ struct PuzzleImagePicker: View {
     var body: some View {
         VStack(spacing: 0) {
             // 类别选择器
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
-                    ForEach(PuzzleImageCategory.allCases, id: \.self) { category in
-                        CategoryButton(
-                            category: category,
-                            isSelected: category == selectedCategory,
-                            action: { selectedCategory = category }
-                        )
-                    }
+            HStack(spacing: 16) {
+                ForEach(PuzzleImageCategory.allCases, id: \.self) { category in
+                    CategoryButton(
+                        category: category,
+                        isSelected: category == selectedCategory,
+                        action: { selectedCategory = category }
+                    )
                 }
-                .padding()
             }
+            .frame(maxWidth: .infinity)
+            .padding()
             .background(Color(.systemBackground))
             
             // 图片网格
@@ -84,7 +83,7 @@ struct PuzzleImagePicker: View {
                 ], spacing: 16) {
                     ForEach(filteredImages) { puzzleImage in
                         if let image = puzzleImage.image {
-                            ImageCard(image: image, title: puzzleImage.displayName) {
+                            ImageCard(image: image, title: puzzleImage.displayName, cardHeight: 320) {
                                 NavigationLink {
                                     PuzzleGameView(difficulty: difficulty, image: image)
                                 } label: {
@@ -135,11 +134,13 @@ struct CategoryButton: View {
 struct ImageCard: View {
     let image: UIImage
     let title: String
+    let cardHeight: CGFloat
     let actionView: AnyView
     
-    init(image: UIImage, title: String, @ViewBuilder action: () -> some View) {
+    init(image: UIImage, title: String, cardHeight: CGFloat = 320, @ViewBuilder action: () -> some View) {
         self.image = image
         self.title = title
+        self.cardHeight = cardHeight
         self.actionView = AnyView(action())
     }
     
@@ -148,7 +149,8 @@ struct ImageCard: View {
             Image(uiImage: image)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(height: 160)
+                .frame(height: cardHeight)
+                .frame(maxWidth: .infinity)
                 .clipped()
             
             Text(title)
